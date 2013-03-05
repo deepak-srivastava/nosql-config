@@ -103,6 +103,7 @@ class CRM_Utils_Cache {
     switch ($cachePlugin) {
       case 'ArrayCache':
       case 'NoCache':
+      case 'Mongodb':
         $defaults = array();
         break;
 
