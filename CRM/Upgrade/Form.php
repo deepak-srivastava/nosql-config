@@ -389,7 +389,7 @@ SET    version = '$version'
 
     $phpVersion = phpversion();
     $minPhpVersion = '5.3.3';
-    if (version_compare($phpVersion, $minPhpVersion) <= 0) {
+    if (version_compare($phpVersion, $minPhpVersion) < 0) {
       $error = ts('CiviCRM %3 requires PHP version %1 (or newer), but the current system uses %2 ',
                array(
                  1 => $minPhpVersion,
@@ -403,8 +403,8 @@ SET    version = '$version'
       $error = ts('CiviCRM %1 requires MySQL trigger privileges.',
                array(1 => $latestVer));
     }
-    
-    if (CRM_Core_DAO::singleValueQuery('SELECT @@GLOBAL.thread_stack') < (1024*self::MINIMUM_THREAD_STACK)) {
+
+    if (CRM_Core_DAO::getGlobalSetting('thread_stack', 0) < (1024*self::MINIMUM_THREAD_STACK)) {
       $error = ts('CiviCRM %1 requires MySQL thread stack >= %2k', array(
         1 => $latestVer,
         2 => self::MINIMUM_THREAD_STACK,
@@ -601,7 +601,7 @@ SET    version = '$version'
     $upgrade = new CRM_Upgrade_Form();
     $upgrade->setVersion($rev);
     CRM_Utils_System::flushCache();
-    
+
     if (version_compare($currentVer, '4.1.alpha1') >= 0) {
       CRM_Core_BAO_Setting::updateSettingsFromMetaData();
     }

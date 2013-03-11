@@ -338,12 +338,9 @@ SELECT name, mail
     // If the path is within the drupal directory we can add in the normal way
     if (CRM_Utils_System_Drupal::formatResourceUrl($url)) {
       drupal_add_js($url, 'module', $scope);
+      return TRUE;
     }
-    // D6 hack for external js files
-    else {
-      drupal_add_js('document.write(unescape("%3Cscript src=\'' . $url . '\' type=\'text/javascript\'%3E%3C/script%3E"));', 'inline', $scope);
-    }
-    return TRUE;
+    return FALSE;
   }
 
   /**

@@ -82,7 +82,6 @@
         return fieldName;
       }
 
-      
       var checkable = function () {
         $(this).change (function() {
           var params={sequential:1};
@@ -245,6 +244,8 @@
           if ($i.data('action')) {
             params[params['field']]=value;//format for create at least
             action=$i.data('action');
+            delete params['field'];
+            delete params['value'];
           } else {
             action="setvalue";
           }
