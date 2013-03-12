@@ -564,6 +564,8 @@ class CRM_Core_BAO_Setting extends CRM_Core_DAO_Setting {
   static function loadSettingsMetadata($metaDataFolder) {
     $settingMetaData = array();
     $settingsFiles = CRM_Utils_File::findFiles($metaDataFolder, '*.setting.php');
+    $newSettingsFiles = CRM_Utils_File::findFiles($metaDataFolder, 'system.*');
+    $settingsFiles = array_merge($settingsFiles, $newSettingsFiles);
     foreach ($settingsFiles as $file) {
       $settings = include $file;
       $settingMetaData = array_merge($settingMetaData, $settings);
