@@ -37,7 +37,7 @@
  */
 
 return array(
-  'mongodb_connections_default_host' => array(
+  'host' => array(
     'group_name' => 'system.cache.mongodb',
     'group' => 'cache',
     'name' => 'host',
@@ -50,7 +50,7 @@ return array(
     'description' => 'default is localhost if not set',
     'help_text'   => 'default is localhost if not set',
   ),
-  'mongodb_connections_default_db' => array(
+  'db' => array(
     'group_name' => 'system.cache.mongodb',
     'group' => 'cache',
     'name' => 'db',
@@ -63,7 +63,7 @@ return array(
     'description' => 'default is civicrm if not set',
     'help_text'   => 'default is civicrm if not set',
   ),
-  'mongodb_connections_default_port' => array(
+  'port' => array(
     'group_name' => 'system.cache.mongodb',
     'group' => 'cache',
     'name' => 'port',

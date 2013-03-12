@@ -39,8 +39,7 @@
  */
 class CRM_Admin_Form_NewSetting extends CRM_Core_Form {
 
-  /* protected $_defaults; */
-  /* protected $_settings = array(); */
+  protected $_gname;
 
   /**
    * Function to build the form
@@ -70,7 +69,14 @@ class CRM_Admin_Form_NewSetting extends CRM_Core_Form {
    * @return None
    */
   function setDefaultValues() {
-    return array();
+    $this->_defaults = CRM_Core_BAO_Setting::getItem($this->_gname);
+
+    if (empty($this->_defaults)) {
+      foreach ($this->_settings as $setting => $group) {
+        $this->_defaults[$setting] = CRM_Utils_Array::value('default', $group);
+      }
+    }
+    return $this->_defaults;
   }
 
   /**
@@ -126,7 +132,14 @@ class CRM_Admin_Form_NewSetting extends CRM_Core_Form {
    */
   public function postProcess() {
     // store the submitted values in an array
-    $params = $this->controller->exportValues($this->_name);
+    $params   = $this->controller->exportValues($this->_name);
+    $settings = array_intersect_key($params, $this->_settings);
+    $result   = civicrm_api('setting', 'create', $settings + array('version' => 3));
+    foreach ($settings as $setting => $settingGroup){
+      unset($params[$setting]);
+    }
+    CRM_Core_BAO_ConfigSetting::create($params);
+    CRM_Core_Session::setStatus(" ", ts('Changes Saved.'), "success");
   }
 }
 
