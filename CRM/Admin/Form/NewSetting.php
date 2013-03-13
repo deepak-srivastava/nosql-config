@@ -73,7 +73,11 @@ class CRM_Admin_Form_NewSetting extends CRM_Core_Form {
 
     if (empty($this->_defaults)) {
       foreach ($this->_settings as $setting => $group) {
-        $this->_defaults[$setting] = CRM_Utils_Array::value('default', $group);
+        if (array_key_exists('value', $group)) {
+          $this->_defaults[$setting] = $group['value'];
+        } else {
+          $this->_defaults[$setting] = CRM_Utils_Array::value('default', $group);
+        }
       }
     }
     return $this->_defaults;
@@ -116,6 +120,16 @@ class CRM_Admin_Form_NewSetting extends CRM_Core_Form {
           'isDefault' => TRUE,
         ),
         array(
+          'type' => 'next',
+          'name' => ts('Reset to defaults'),
+          'subName' => 'defaults',
+        ),
+        array(
+          'type' => 'next',
+          'name' => ts('Restore from disk'),
+          'subName' => 'disk',
+        ),
+        array(
           'type' => 'cancel',
           'name' => ts('Cancel'),
         ),
@@ -132,14 +146,28 @@ class CRM_Admin_Form_NewSetting extends CRM_Core_Form {
    */
   public function postProcess() {
     // store the submitted values in an array
-    $params   = $this->controller->exportValues($this->_name);
-    $settings = array_intersect_key($params, $this->_settings);
-    $result   = civicrm_api('setting', 'create', $settings + array('version' => 3));
-    foreach ($settings as $setting => $settingGroup){
-      unset($params[$setting]);
+    $params    = $this->controller->exportValues($this->_name);
+    $className = CRM_Utils_String::getClassName($this->_name);
+    if ($this->controller->getButtonName('submit') == "_qf_{$className}_next_defaults") {
+      // restore
+      CRM_Core_BAO_Setting::restoreIntoDB($this->_gname);
+      CRM_Core_Session::setStatus(" ", ts('Setting reset to defaults.'), "success");
+    }     
+    else if ($this->controller->getButtonName('submit') == "_qf_{$className}_next_disk") {
+      CRM_Core_BAO_Setting::restoreIntoDB($this->_gname, 'config');
+      CRM_Core_Session::setStatus(" ", ts('Setting restored from disk to db.'), "success");
     }
-    CRM_Core_BAO_ConfigSetting::create($params);
-    CRM_Core_Session::setStatus(" ", ts('Changes Saved.'), "success");
+    else {
+      $settings = array_intersect_key($params, $this->_settings);
+      $result   = civicrm_api('setting', 'create', $settings + array('version' => 3));
+      foreach ($settings as $setting => $settingGroup) {
+        unset($params[$setting]);
+      }
+      CRM_Core_BAO_ConfigSetting::create($params);
+      CRM_Core_Session::setStatus(" ", ts('Changes Saved.'), "success");
+    }
+    CRM_Utils_System::redirect(CRM_Utils_System::url("civicrm/admin/setting",
+        "reset=1&gname={$this->_gname}"));
   }
 }
 
