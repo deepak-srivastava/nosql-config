@@ -210,6 +210,12 @@
     <weight>80</weight>
   </item>
   <item>
+     <path>civicrm/admin/setting</path>
+     <title>CiviCRM Settings</title>
+     <page_callback>CRM_Admin_Form_NewSetting</page_callback>
+     <access_arguments>administer CiviCRM</access_arguments>
+  </item>
+  <item>
      <path>civicrm/admin/setting/preferences/display</path>
      <title>Display Preferences</title>
      <page_callback>CRM_Admin_Form_Preferences_Display</page_callback>
