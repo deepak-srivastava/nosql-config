@@ -49,6 +49,7 @@ class CRM_Admin_Form_NewSetting extends CRM_Core_Form {
    */
   public function preProcess() {
     $this->_gname = CRM_Utils_Request::retrieve('gname', 'String', $this, true);
+    CRM_Utils_System::setTitle(ts('CiviCRM Settings: ') . $this->_gname);
 
     global $civicrm_root;
     $metaDataFolder = $civicrm_root. '/settings';
@@ -158,12 +159,15 @@ class CRM_Admin_Form_NewSetting extends CRM_Core_Form {
       CRM_Core_Session::setStatus(" ", ts('Setting restored from disk to db.'), "success");
     }
     else {
-      $settings = array_intersect_key($params, $this->_settings);
-      $result   = civicrm_api('setting', 'create', $settings + array('version' => 3));
-      foreach ($settings as $setting => $settingGroup) {
-        unset($params[$setting]);
+      $params = array_intersect_key($params, $this->_settings);
+      foreach ($params as $name => $value) {
+        CRM_Core_BAO_Setting::setItem(
+          $value,
+          $this->_settings[$name]['group_name'],
+          $name
+        );
       }
-      CRM_Core_BAO_ConfigSetting::create($params);
+      // FIXME: reset cache here
       CRM_Core_Session::setStatus(" ", ts('Changes Saved.'), "success");
     }
     CRM_Utils_System::redirect(CRM_Utils_System::url("civicrm/admin/setting",
