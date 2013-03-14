@@ -1,4 +1,5 @@
-{*
+<?php
+/*
  +--------------------------------------------------------------------+
  | CiviCRM version 4.3                                                |
  +--------------------------------------------------------------------+
@@ -22,23 +23,31 @@
  | GNU Affero General Public License or the licensing of CiviCRM,     |
  | see the CiviCRM license FAQ at http://civicrm.org/licensing        |
  +--------------------------------------------------------------------+
-*}
+*/
 
-{if $elements}
-<div class="crm-block crm-form-block crm-path-form-block">
- <div class="crm-submit-buttons">{include file="CRM/common/formButtons.tpl" location="top"}</div>
-           <table class="form-layout">
-            {foreach from=$elements item=elementInfo key=element}
-            <tr class="crm-path-form-block-$element">
-                <td class="label">{$form.$element.label}</td>
-                <td>{$form.$element.html}<br />
-                    <span class="description">{$elementInfo.description}</span>
-                </td>
-            </tr>
-            {/foreach}
-        </table>
-   <div class="crm-submit-buttons">{include file="CRM/common/formButtons.tpl" location="bottom"}</div>
-</div>
-{else}
-  <div class="status messages">{ts}No settings file detected. Make sure to specify a vaid gname in url.{/ts}</div>
-{/if}
+/**
+ *
+ * @package CRM
+ * @copyright CiviCRM LLC (c) 2004-2013
+ * $Id$
+ *
+ */
+/*
+ * Settings metadata file
+ */
+
+return array(
+  'class' => array(
+    'group_name' => 'system.cache',
+    'group' => 'cache',
+    'name' => 'class',
+    'type' => 'String',
+    'html_type' => 'Text',
+    'quick_form_type' => 'Element',
+    'default' => 'ArrayCache',
+    'title'   => 'Cache Class',
+    'is_domain' => 1,
+    'description' => 'cache file is going to be decided based on this',
+    'help_text'   => 'default is mongodb if not set',
+  ),
+);
