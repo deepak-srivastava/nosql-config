@@ -321,62 +321,8 @@ class CRM_Core_BAO_Setting extends CRM_Core_DAO_Setting {
       self::$_cache[$cacheKey][$name] = $value;
     }
 
-    self::writeToDisk($group);
+    CRM_Core_BAO_NewSetting::writeToDisk($group);
   }
-
-  function writeToDisk($group) {
-    global $civicrm_root;
-    $metaDataFolder = $civicrm_root. '/settings';
-    $settingsFile   = CRM_Utils_File::findFiles($metaDataFolder, "{$group}.php");
-
-    // if there is only one file present matching with $group, we proceed with writing to disk
-    if (!empty($settingsFile) && count($settingsFile) == 1) {
-      $settingsInDB = CRM_Core_BAO_Setting::getItem($group);
-      $settingsFile = $settingsFile[0];
-      $settings = include $settingsFile;
-
-      foreach ($settings as $settingKey => $settingVal) {
-        if (array_key_exists($settingKey, $settingsInDB)) {
-          $settings[$settingKey]['value'] = $settingsInDB[$settingKey];
-        }
-      }
-
-      $config = CRM_Core_Config::singleton();
-      @file_put_contents("{$config->configAndLogDir}{$group}.php", "<?php \n return " . var_export($settings, true) . ";");
-    }
-  }
-
-  function restoreIntoDB($group, $restoreDir = 'default') {
-    if ($restoreDir == 'default') {
-      global $civicrm_root;
-      $metaDataFolder = $civicrm_root. '/settings';
-      $settingsFile   = CRM_Utils_File::findFiles($metaDataFolder, "{$group}.php");
-    } else if ($restoreDir == 'config') {
-      $config = CRM_Core_Config::singleton();
-      $settingsFile   = CRM_Utils_File::findFiles($config->configAndLogDir, "{$group}.php");
-    }
-
-    // if there is only one file present matching with $group, we proceed with writing to disk
-    if (!empty($settingsFile) && count($settingsFile) == 1) {
-      $settingsFile = $settingsFile[0];
-      $settings = include $settingsFile;
-      $params   = array();
-
-      foreach ($settings as $settingKey => $settingVal) {
-        if ($restoreDir == 'default') {
-          $params[$settingVal['name']] = CRM_Utils_Array::value('default', $settingVal);
-        } else if ($restoreDir == 'config') {
-          $params[$settingVal['name']] = CRM_Utils_Array::value('value', $settingVal);
-        }
-      }
-      
-      if (!empty($params))
-        $result = civicrm_api('setting', 'create', $params + array('version' => 3));
-      
-      //FIXME: reset cache if required 
-    }
-  }
-
   /**
    * Store multiple items in the setting table. Note that this will also store config keys
    * the storage is determined by the metdata and is affected by

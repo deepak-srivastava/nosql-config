@@ -33,23 +33,6 @@
  *
  */
 class CRM_Utils_Cache_Mongodb {
-  const DEFAULT_HOST    = 'localhost';
-  const DEFAULT_PORT    = 27017;
-
-  /**
-   * The host name of the mongodbd server
-   *
-   * @var string
-   */
-  protected $_host = self::DEFAULT_HOST;
-
-  /**
-   * The port on which to connect on
-   *
-   * @var int
-   */
-  protected $_port = self::DEFAULT_PORT;
-
   /**
    * The actual mongodb collection object
    *
@@ -65,16 +48,13 @@ class CRM_Utils_Cache_Mongodb {
    * @return void
    */
   function __construct($config) {
-    if (isset($config['host'])) {
-      $this->_host = $config['host'];
-    }
-    if (isset($config['port'])) {
-      $this->_port = $config['port'];
-    }
-
     try {
-      $connection = new MongoClient(); // connects to localhost:27017
-      $this->_db = $connection->selectDB("civicrm");
+      $host = CRM_Utils_Array::value('host', $config, 'localhost');
+      $port = CRM_Utils_Array::value('port', $config, '27017');
+      $connection = new MongoClient("mongodb://{$host}:{$port}"); // connects to localhost:27017
+
+      $db = CRM_Utils_Array::value('db', $config, 'civicrm');
+      $this->_db = $connection->selectDB($db);
       $this->_cache = $this->_db->cache;
     }
     catch ( MongoConnectionException $e ) {

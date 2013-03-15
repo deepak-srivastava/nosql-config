@@ -67,6 +67,8 @@ class CRM_Utils_Cache {
    */
   static function &singleton() {
     if (self::$_singleton === NULL) {
+      static $loopCount = 0; $loopCount++;
+
       $className = 'ArrayCache';   // default to ArrayCache for now
 
       // Maintain backward compatibility for now.
@@ -83,12 +85,28 @@ class CRM_Utils_Cache {
         $className = CIVICRM_DB_CACHE_CLASS;
       }
 
+      $cache = array();
+      if ( $loopCount == 1 ) {
+        // we check for loop count to avoid nested calls to this singleton
+        $config = CRM_Core_Config::singleton();
+        $cache = @include $config->configAndLogDir . "system.cache.php";
+        if (!empty($cache)) {
+          $className = $cache['class']['value'];
+        }
+      }
+
       // a generic method for utilizing any of the available db caches.
       $dbCacheClass = 'CRM_Utils_Cache_' . $className;
       require_once(str_replace('_', DIRECTORY_SEPARATOR, $dbCacheClass) . '.php');
-      $settings = self::getCacheSettings($className);
-      self::$_singleton = new $dbCacheClass($settings);
+
+      if (!empty($cache)) {
+        $cacheClass = strtolower($className);
+        $settings   = CRM_Core_BAO_Setting::getItem("system.cache.$cacheClass");
+      } else {
+        $settings = self::getCacheSettings($className);
       }
+      self::$_singleton = new $dbCacheClass($settings);
+    }
     return self::$_singleton;
   }
 
