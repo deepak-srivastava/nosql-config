@@ -53,12 +53,10 @@ class CRM_Admin_Form_NewSetting extends CRM_Core_Form {
 
     global $civicrm_root;
     $metaDataFolder = $civicrm_root. '/settings';
-    $settingsFiles = CRM_Utils_File::findFiles($metaDataFolder, $this->_gname . '.php');
+    $settingsFile = CRM_Utils_File::findFiles($metaDataFolder, $this->_gname . '.php');
+    $settingsFile =  $settingsFile[0];
 
-    foreach ($settingsFiles as $file) {
-      $this->_settings = include $file;
-      break;
-    }
+    $this->_settings = include $settingsFile;
   }
 
   /**
@@ -151,11 +149,11 @@ class CRM_Admin_Form_NewSetting extends CRM_Core_Form {
     $className = CRM_Utils_String::getClassName($this->_name);
     if ($this->controller->getButtonName('submit') == "_qf_{$className}_next_defaults") {
       // restore
-      CRM_Core_BAO_Setting::restoreIntoDB($this->_gname);
+      CRM_Core_BAO_NewSetting::restoreIntoDB($this->_gname);
       CRM_Core_Session::setStatus(" ", ts('Setting reset to defaults.'), "success");
     }     
     else if ($this->controller->getButtonName('submit') == "_qf_{$className}_next_disk") {
-      CRM_Core_BAO_Setting::restoreIntoDB($this->_gname, 'config');
+      CRM_Core_BAO_NewSetting::restoreIntoDB($this->_gname, 'config');
       CRM_Core_Session::setStatus(" ", ts('Setting restored from disk to db.'), "success");
     }
     else {
