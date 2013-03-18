@@ -62,6 +62,17 @@ class CRM_Upgrade_Incremental_php_FourThree {
         return FALSE;
       }
     }
+    if ($rev == '4.3.beta4' && CRM_Utils_Constant::value('CIVICRM_UF', FALSE) == 'Drupal6') {
+      // CRM-11823 - Make sure the D6 HTML HEAD technique will work on upgrade pages
+      theme('item_list', array()); // force-load theme registry
+      $theme_registry = theme_get_registry();
+      if (
+        !isset($theme_registry['page']['preprocess functions']) ||
+        FALSE === array_search('civicrm_preprocess_page_inject', $theme_registry['page']['preprocess functions'])
+      ) {
+        CRM_Core_Error::fatal('Please reset the Drupal cache (Administer => Site Configuration => Performance => Clear cached data))');
+      }
+    }
   }
 
   /**
@@ -522,7 +533,7 @@ FROM   civicrm_contribution con
                    AND efaPP.account_relationship = {$assetAccountIs})
        LEFT  JOIN {$tempTableName1} tpi
                ON ft.payment_instrument_id = tpi.instrument_id
-WHERE  con.fee_amount IS NOT NULL AND (con.contribution_status_id IN (%1, %3) OR (con.contribution_status_id =%2 AND con.is_pay_later = 1))
+WHERE  ft.fee_amount IS NOT NULL AND ft.fee_amount != 0 AND (con.contribution_status_id IN (%1, %3) OR (con.contribution_status_id =%2 AND con.is_pay_later = 1))
 GROUP  BY con.id";
     CRM_Core_DAO::executeQuery($sql, $queryParams);
 
