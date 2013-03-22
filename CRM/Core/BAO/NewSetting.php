@@ -65,7 +65,7 @@ class CRM_Core_BAO_NewSetting extends CRM_Core_DAO_Setting {
     }
   }
 
-  function restoreIntoDB($group, $restoreDir = 'default') {
+  static function restoreIntoDB($group, $restoreDir = 'default') {
     if ($restoreDir == 'default') {
       global $civicrm_root;
       $metaDataFolder = $civicrm_root. '/settings';
@@ -94,5 +94,64 @@ class CRM_Core_BAO_NewSetting extends CRM_Core_DAO_Setting {
       
       //FIXME: reset cache if required 
     }
+  }
+
+  //FIXME: should convert to singleton
+  static function getMongoDB($abort = false) {
+    static $db = null;
+    if (!$db) {
+      try {
+        $settings = CRM_Core_BAO_Setting::getItem("system.cache.mongodb");
+        if (!$abort && empty($settings)) {
+          return false;
+        }
+
+        $host = CRM_Utils_Array::value('host', $settings, 'localhost');
+        $port = CRM_Utils_Array::value('port', $settings, '27017');
+        $connection = new MongoClient("mongodb://{$host}:{$port}"); // connects to localhost:27017
+        
+        $db = CRM_Utils_Array::value('db', $settings, 'civicrm');
+        $db = $connection->selectDB($db);
+      }
+      catch ( MongoConnectionException $e ) {
+        echo '<p>Couldn\'t connect to mongodb, is the "mongo" process running?</p>';
+        CRM_Utils_System::civiExit();
+      }
+    }
+    return $db;
+  }
+
+  static function migrate() {
+    $db = self::getMongoDB(true);
+    $db->options->drop();
+
+    $sql = "
+select og.name as og_name, og.is_active as og_is_active, og.description as og_description, og.*, ov.*
+from civicrm_option_group og
+inner join civicrm_option_value ov ON og.id = ov.option_group_id";
+    $dao = CRM_Core_DAO::executeQuery($sql);
+    $doc = array();
+    while ($dao->fetch()) {
+      if (!array_key_exists($dao->og_name, $doc)) {
+        $doc[$dao->og_name] = array(
+          'name'  => $dao->og_name,
+          'title' => $dao->title,
+          'description' => $dao->og_description,
+          'is_reserved' => $dao->is_reserved,
+          'is_active'   => $dao->og_is_active,
+        );
+      }
+      $doc[$dao->og_name]['values'][] = array(
+        'name'  => $dao->name,
+        'value' => $dao->value,
+        'label' => $dao->label,
+        'grouping' => $dao->grouping,
+        'description' => $dao->description,
+      );
+    }
+    $db->options->batchInsert($doc);
+
+    CRM_Core_Session::setStatus(ts('MongoDB refilled for options.'));
+    CRM_Utils_System::redirect(CRM_Utils_System::url('civicrm/admin', 'reset=1'));
   }
 }

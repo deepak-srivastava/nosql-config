@@ -171,4 +171,10 @@
     <title>ProfileEditor</title>
     <access_arguments>access CiviCRM</access_arguments>
   </item>
+  <item>
+     <path>civicrm/mongodb/migrate</path>
+     <title>Refill MongoDB</title>
+     <page_callback>CRM_Core_BAO_NewSetting::migrate</page_callback>
+     <access_arguments>administer CiviCRM</access_arguments>
+  </item>
 </menu>

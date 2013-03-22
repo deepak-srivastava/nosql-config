@@ -77,6 +77,37 @@ class CRM_Core_OptionGroup {
     return self::$_values;
   }
 
+  static function &valuesCommonMongoDB(
+    $doc, $flip = FALSE, $grouping = FALSE,
+    $localize = FALSE, $valueColumnName = 'label'
+  ) {
+    self::$_values = array();
+
+    foreach ($doc['values'] as $document) {
+      if ($flip) {
+        if ($grouping) {
+          self::$_values[$document['value']] = $document['grouping'];
+        }
+        else {
+          self::$_values[$document[$valueColumnName]] = $document['value'];
+        }
+      }
+      else {
+        if ($grouping) {
+          self::$_values[$document[$valueColumnName]] = $document['grouping'];
+        }
+        else {
+          self::$_values[$document['value']] = $document[$valueColumnName];
+        }
+      }
+    }
+    if ($localize) {
+      $i18n = CRM_Core_I18n::singleton();
+      $i18n->localizeArray(self::$_values);
+    }
+    return self::$_values;
+  }
+
   /**
    * This function retrieves all the values for the specific option group by name
    * this is primarily used to create various html based form elements
@@ -138,7 +169,14 @@ WHERE  v.option_group_id = g.id
     $p = array(1 => array($name, 'String'));
     $dao = CRM_Core_DAO::executeQuery($query, $p);
 
-    $var = self::valuesCommon($dao, $flip, $grouping, $localize, $labelColumnName);
+    // mongodb 
+    if ($db = CRM_Core_BAO_NewSetting::getMongoDB(false)) {
+      $document = $db->options->findOne(array('name' => $name));
+      $var = self::valuesCommonMongoDB($document, $flip, $grouping, $localize, $labelColumnName);
+    }
+    else {
+      $var = self::valuesCommon($dao, $flip, $grouping, $localize, $labelColumnName);
+    }
 
     // call option value hook
     CRM_Utils_Hook::optionValues($var, $name);
